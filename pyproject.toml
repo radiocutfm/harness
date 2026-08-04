@@ -1,0 +1,34 @@
+[project]
+name = "fierro-harness"
+version = "0.1.0"
+description = "Fierro corporate harness for OpenCode skills and configuration"
+readme = "README.md"
+requires-python = ">=3.14"
+authors = [{ name = "Lambda/Fierro" }]
+dependencies = []
+
+[project.scripts]
+fierro-harness = "fierro_harness.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11.0,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "fierro_harness"
+module-root = "src"
+
+[dependency-groups]
+dev = [
+  "pytest>=9.0",
+  "ruff>=0.14",
+]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "PTH", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

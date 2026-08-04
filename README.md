@@ -30,7 +30,6 @@ En esta versión se incluyen:
 
 - `scripting-python`: herramienta general para resolver tareas automatizables con Python y `uv`.
 - `setup`: prepara herramientas requeridas por las skills.
-- `agent-browser`: automatización de navegación web.
 - `trello`, `google-workspace`, `fierro-cli`, `zoho-desk` y `zoko-kb`: skills iniciales de integración.
 
 Las integraciones que todavía requieren configuración de sus herramientas se habilitan progresivamente. La skill `setup` puede preparar el conjunto completo cuando esas herramientas estén definidas.
@@ -43,9 +42,9 @@ El token de DeepSeek no se guarda en este repositorio ni en `opencode.json`. La 
 
 Si el usuario ya tiene otro modelo configurado, el instalador informa el conflicto y no reemplaza la configuración personal. Antes de modificar `opencode.json` crea un backup.
 
-## Uso de agent-browser
+## Automatización web
 
-`agent-browser` requiere Node.js/npm. `npx` no está disponible necesariamente en todos los equipos: forma parte de la instalación de npm. La preparación completa ofrecerá instalar Node.js/npm, `agent-browser`, Chrome for Testing y las skills oficiales cuando corresponda.
+La automatización web con Playwright Python está definida en el issue #22 y todavía no forma parte de la instalación estable.
 
 ## Seguridad
 
@@ -53,4 +52,4 @@ No incluir tokens, cookies, contraseñas, prompts ni datos de clientes en este r
 
 ## Estado
 
-El flujo básico de instalación ya funciona. La instalación de herramientas, OAuth de Google Workspace, Passbolt, Trello y las integraciones de Fierro se implementan en sus issues correspondientes.
+El flujo básico de instalación ya funciona. La instalación de herramientas, automatización web, OAuth de Google Workspace, Passbolt, Trello y las integraciones de Fierro se implementan en sus issues correspondientes.

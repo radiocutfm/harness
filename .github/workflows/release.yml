@@ -14,12 +14,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.release.tag_name }}
+      - uses: astral-sh/setup-uv@v6
       - name: Preparar artefactos
         run: |
           mkdir release
           cp install.sh install.ps1 release/
-          sed 's/@HARNESS_VERSION@/${{ github.event.release.tag_name }}/g' install.py > release/install.py
-          tar -czf release/skills.tar.gz skills
+          uv build --wheel --out-dir release
+          cp release/fierro_harness-*.whl release/fierro_harness-latest.whl
           sha256sum release/* > release/checksums.txt
       - name: Adjuntar artefactos al release
         env:

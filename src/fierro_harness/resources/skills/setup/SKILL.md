@@ -20,7 +20,6 @@ Usá esta skill cuando el usuario quiera preparar el entorno completo o comproba
 - Verificá plataforma, versión, autenticación y salida JSON cuando corresponda.
 - No solicites ni guardes tokens en archivos del repositorio.
 - Si una herramienta no tiene instalador confiable, informá el bloqueo y no improvises una descarga.
-- Para agent-browser, instalar también el navegador requerido y ofrecer la skill oficial de descubrimiento mediante su procedimiento documentado.
 
 ## Resultado
 
