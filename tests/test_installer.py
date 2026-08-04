@@ -47,3 +47,8 @@ def test_platform_names_are_normalized_before_plan_lookup() -> None:
     assert "install.sh" in TOOLS_BY_NAME["uv"].installation_plan("Darwin").commands[0]
     assert TOOLS_BY_NAME["jq"].supports("Darwin")
     assert "jq-macos" in installation_plan(TOOLS_BY_NAME["jq"], system="Darwin")[0]
+
+
+def test_plans_are_explicit_for_each_core_tool() -> None:
+    assert "astral.sh" in installation_plan(TOOLS_BY_NAME["uv"], system="Linux")[0]
+    assert "opencode-ai@1.18.13" in installation_plan(TOOLS_BY_NAME["opencode"], system="Linux")[0]

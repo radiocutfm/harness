@@ -179,3 +179,11 @@ def installation_plan(spec: ToolSpec, system: str | None = None) -> tuple[str, .
 def tool_status_json() -> str:
     """Encode inspection results for scripts and the setup skill."""
     return json.dumps([asdict(status) for status in inspect_tools()], ensure_ascii=False)
+
+
+def install_tool(spec: ToolSpec, *, system: str | None = None, dry_run: bool = False) -> None:
+    """Run the reviewed plan only after the caller received explicit consent."""
+    for command in installation_plan(spec, system):
+        print(f"Install: {command}")
+        if not dry_run:
+            subprocess.run(command, shell=True, check=True)
