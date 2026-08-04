@@ -16,6 +16,7 @@ def test_install_is_idempotent_and_configures_model(tmp_path: Path, monkeypatch)
 
     assert installer.install() == 0
     assert (tmp_path / ".agents" / "skills" / "scripting-python" / "SKILL.md").exists()
+    assert (tmp_path / ".agents" / "skills" / "trello" / "scripts" / "trello.py").exists()
 
 
 def test_install_preserves_personal_model(tmp_path: Path, monkeypatch) -> None:
