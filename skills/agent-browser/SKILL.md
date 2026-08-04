@@ -9,7 +9,7 @@ metadata:
 
 ## Herramienta requerida
 
-- `agent-browser`, versión mínima: la fijada por la integración del harness.
+- `agent-browser`: la versión mínima debe definirse y fijarse en la issue de integración antes de una release estable.
 - Node.js y npm para la instalación oficial.
 - Chrome for Testing, instalado con `agent-browser install`.
 - En Linux, las dependencias del navegador pueden requerir `agent-browser install --with-deps`.
@@ -25,10 +25,10 @@ agent-browser skills list --json
 agent-browser skills get core --full
 ```
 
-Usá `core` para navegación, snapshots, formularios, screenshots, extracción, sesiones y autenticación. No copies manualmente el contenido oficial dentro de esta skill: la documentación indica que puede quedar desactualizada. Instalá la skill de descubrimiento oficial sólo mediante el mecanismo documentado por el proyecto:
+Usá `core` para navegación, snapshots, formularios, screenshots, extracción, sesiones y autenticación. No copies manualmente su contenido dentro de esta skill: la documentación indica que puede quedar desactualizado. La skill del harness ya funciona como punto de descubrimiento; no hace falta instalar otra skill mediante `npx`.
 
 ```sh
-npx skills add vercel-labs/agent-browser
+agent-browser skills get core --full
 ```
 
 ## Flujo básico
@@ -42,8 +42,6 @@ npx skills add vercel-labs/agent-browser
 ## Seguridad
 
 - No navegues a sitios ni envíes datos sin autorización del usuario.
-- Confirmá antes de enviar formularios, mensajes, emails, compras o cambios irreversibles.
+- Confirmá antes de enviar formularios, mensajes, emails, o cualquier cambio sensible.
 - No expongas cookies, tokens, almacenamiento local ni screenshots con información sensible.
 - Preferí sesiones aisladas y no reutilices perfiles personales sin confirmación explícita.
-- Para consultas repetitivas, respetá límites de velocidad y términos del sitio.
-
