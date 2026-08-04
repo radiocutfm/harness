@@ -1,12 +1,8 @@
 name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "Tag de release, por ejemplo 0.1.0"
-        required: true
-        type: string
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -16,16 +12,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
       - name: Preparar artefactos
         run: |
           mkdir release
           cp install.sh install.ps1 release/
-          sed 's/@HARNESS_VERSION@/${{ inputs.version }}/g' install.py > release/install.py
+          sed 's/@HARNESS_VERSION@/${{ github.event.release.tag_name }}/g' install.py > release/install.py
+          tar -czf release/skills.tar.gz skills
           sha256sum release/* > release/checksums.txt
-      - uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ inputs.version }}
-          name: Harness v${{ inputs.version }}
-          generate_release_notes: true
-          files: |
-            release/*
+      - name: Adjuntar artefactos al release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" release/* --clobber
