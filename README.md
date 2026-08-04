@@ -40,6 +40,7 @@ Las skills iniciales son:
 - `zoho-desk`
 - `zoko-kb`
 - `scripting-python`
+- `setup`
 
 Las skills de integración todavía son contratos iniciales. Cada una deberá documentar sus herramientas requeridas, versiones mínimas, instalación, autenticación y operaciones soportadas antes de habilitarse.
 
