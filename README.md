@@ -1,18 +1,6 @@
 # Fierro Agents Harness
 
-Repositorio interno de Lambda/Fierro para versionar e instalar skills y herramientas que utilizarán agentes de OpenCode.
-
-## Alcance actual
-
-Este repositorio contiene el boilerplate inicial:
-
-- `install.py`: script Python ejecutado con `uv run`.
-- `install.sh`: bootstrap para Linux.
-- `install.ps1`: bootstrap para Windows PowerShell.
-- `skills/`: skills globales compatibles con OpenCode.
-- `.github/workflows/release.yml`: publicación de los artefactos de instalación.
-
-La implementación se realizará progresivamente mediante los issues del repositorio.
+Instalador corporativo de skills y configuración inicial para OpenCode.
 
 ## Instalación
 
@@ -28,23 +16,41 @@ Windows PowerShell:
 irm https://github.com/radiocutfm/harness/releases/latest/download/install.ps1 | iex
 ```
 
-Volver a ejecutar el instalador equivale a volver a instalar o reconciliar el entorno.
+El instalador se puede ejecutar nuevamente para reparar o reconciliar el entorno. Actualmente instala las skills globales y configura el modelo predeterminado de OpenCode.
 
-## Skills
+## Qué se instala
 
-Las skills iniciales son:
+Las skills quedan disponibles globalmente para OpenCode en:
 
-- `trello`
-- `google-workspace`
-- `fierro-cli`
-- `zoho-desk`
-- `zoko-kb`
-- `scripting-python`
-- `setup`
-- `agent-browser`
+```text
+~/.agents/skills/
+```
 
-Las skills de integración todavía son contratos iniciales. Cada una deberá documentar sus herramientas requeridas, versiones mínimas, instalación, autenticación y operaciones soportadas antes de habilitarse.
+En esta versión se incluyen:
+
+- `scripting-python`: herramienta general para resolver tareas automatizables con Python y `uv`.
+- `setup`: prepara herramientas requeridas por las skills.
+- `agent-browser`: automatización de navegación web.
+- `trello`, `google-workspace`, `fierro-cli`, `zoho-desk` y `zoko-kb`: skills iniciales de integración.
+
+Las integraciones que todavía requieren configuración de sus herramientas se habilitan progresivamente. La skill `setup` puede preparar el conjunto completo cuando esas herramientas estén definidas.
+
+## Modelo y autenticación
+
+OpenCode queda configurado con DeepSeek V4 Flash como modelo predeterminado. El identificador configurado es `deepseek/deepseek-v4-flash`; se verificará contra el catálogo disponible del proveedor antes de fijar una release estable.
+
+El token de DeepSeek no se guarda en este repositorio ni en `opencode.json`. La integración prevista es obtenerlo desde Passbolt y exponerlo sólo al proceso de OpenCode. Hasta que esa integración esté implementada, el usuario debe configurar su autenticación mediante el mecanismo oficial de OpenCode.
+
+Si el usuario ya tiene otro modelo configurado, el instalador informa el conflicto y no reemplaza la configuración personal. Antes de modificar `opencode.json` crea un backup.
+
+## Uso de agent-browser
+
+`agent-browser` requiere Node.js/npm. `npx` no está disponible necesariamente en todos los equipos: forma parte de la instalación de npm. La preparación completa ofrecerá instalar Node.js/npm, `agent-browser`, Chrome for Testing y las skills oficiales cuando corresponda.
 
 ## Seguridad
 
-No versionar tokens, cookies, contraseñas ni configuración personal. Las integraciones deben preferir CLIs con salida JSON cuando exista una alternativa razonable y deben proteger las credenciales usando los mecanismos seguros de cada herramienta.
+No incluir tokens, cookies, contraseñas, prompts ni datos de clientes en este repositorio. Las acciones de escritura en servicios externos deben pedir confirmación y mostrar previamente el destino y el alcance.
+
+## Estado
+
+El flujo básico de instalación ya funciona. La instalación de herramientas, OAuth de Google Workspace, Passbolt, Trello y las integraciones de Fierro se implementan en sus issues correspondientes.
