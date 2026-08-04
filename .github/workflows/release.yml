@@ -21,8 +21,6 @@ jobs:
           mkdir release
           cp bootstrap/install.sh bootstrap/install.ps1 release/
           uv build --wheel --out-dir release
-          cp release/fierro_harness-*.whl release/fierro_harness-latest.whl
-          sha256sum release/* > release/checksums.txt
       - name: Adjuntar artefactos al release
         env:
           GH_TOKEN: ${{ github.token }}
