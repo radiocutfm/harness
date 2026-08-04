@@ -4,17 +4,18 @@ Instalador corporativo de skills y configuración inicial para OpenCode. Los boo
 
 ## Instalación
 
-Linux:
+En Windows PowerShell:
+
+```powershell
+irm https://github.com/radiocutfm/harness/releases/latest/download/install.ps1 | iex
+```
+
+En Linux:
 
 ```sh
 curl -fsSL https://github.com/radiocutfm/harness/releases/latest/download/install.sh | sh
 ```
 
-Windows PowerShell:
-
-```powershell
-irm https://github.com/radiocutfm/harness/releases/latest/download/install.ps1 | iex
-```
 
 El instalador se puede ejecutar nuevamente para reparar o reconciliar el entorno. Actualmente instala las skills globales y configura el modelo predeterminado de OpenCode.
 
