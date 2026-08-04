@@ -17,6 +17,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - name: Preparar artefactos
         run: |
+          test "$(uv version --short)" = "${{ github.event.release.tag_name }}"
           mkdir release
           cp bootstrap/install.sh bootstrap/install.ps1 release/
           uv build --wheel --out-dir release
