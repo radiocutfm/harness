@@ -1,6 +1,6 @@
 # Fierro Agents Harness
 
-Instalador corporativo de skills y configuración inicial para OpenCode.
+Instalador corporativo de skills y configuración inicial para OpenCode. Los bootstraps de distribución viven en `bootstrap/`; los releases los publican como `install.sh` e `install.ps1`.
 
 ## Instalación
 
