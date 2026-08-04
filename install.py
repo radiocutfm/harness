@@ -7,12 +7,19 @@
 from __future__ import annotations
 
 import argparse
+
+
+HARNESS_VERSION = "@HARNESS_VERSION@"
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Install or repair Fierro Agents Harness")
+    parser = argparse.ArgumentParser(
+        description="Install or repair Fierro Agents Harness"
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     mode = "dry-run" if args.dry_run else "plan"
-    print(f"harness 0.1.0: {mode}")
+    print(f"Fierro-harness {HARNESS_VERSION}: {mode}")
 
 
 if __name__ == "__main__":

@@ -19,7 +19,8 @@ jobs:
       - name: Preparar artefactos
         run: |
           mkdir release
-          cp install.sh install.ps1 install.py release/
+          cp install.sh install.ps1 release/
+          sed 's/@HARNESS_VERSION@/${{ inputs.version }}/g' install.py > release/install.py
           sha256sum release/* > release/checksums.txt
       - uses: softprops/action-gh-release@v2
         with:
