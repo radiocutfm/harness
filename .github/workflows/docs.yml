@@ -8,6 +8,7 @@ on:
       - "Makefile"
       - "pyproject.toml"
       - "uv.lock"
+      - ".github/actions/cruz-installation-token/**"
       - ".github/workflows/docs.yml"
   push:
     branches: [main]
@@ -16,6 +17,7 @@ on:
       - "Makefile"
       - "pyproject.toml"
       - "uv.lock"
+      - ".github/actions/cruz-installation-token/**"
       - ".github/workflows/docs.yml"
   release:
     types: [published]
@@ -32,30 +34,10 @@ jobs:
       - name: Solicitar token de lectura a Cruz
         id: cruz-token
         if: github.event_name != 'pull_request'
-        uses: actions/github-script@v8
+        uses: ./.github/actions/cruz-installation-token
         with:
-          script: |
-            const oidcToken = await core.getIDToken("https://cruz.fierro.com.ar");
-            const response = await fetch(
-              "https://cruz.fierro.com.ar/github/installation-token",
-              {
-                method: "POST",
-                headers: {
-                  "Authorization": `Bearer ${oidcToken}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  repositories: ["radiocutfm/fierro"],
-                  permissions: {contents: "read"},
-                }),
-              },
-            );
-            if (!response.ok) {
-              throw new Error(`Cruz rechazó el pedido de token (${response.status})`);
-            }
-            const result = await response.json();
-            core.setSecret(result.token);
-            core.setOutput("token", result.token);
+          repositories: '["radiocutfm/fierro"]'
+          permissions: '{"contents":"read"}'
       - name: Descargar el inventario de Fierro
         if: github.event_name != 'pull_request'
         uses: actions/checkout@v6
@@ -87,32 +69,13 @@ jobs:
       contents: read
       id-token: write
     steps:
+      - uses: actions/checkout@v6
       - name: Solicitar token de escritura a Cruz
         id: cruz-token
-        uses: actions/github-script@v8
+        uses: ./.github/actions/cruz-installation-token
         with:
-          script: |
-            const oidcToken = await core.getIDToken("https://cruz.fierro.com.ar");
-            const response = await fetch(
-              "https://cruz.fierro.com.ar/github/installation-token",
-              {
-                method: "POST",
-                headers: {
-                  "Authorization": `Bearer ${oidcToken}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  repositories: ["radiocutfm/fierro"],
-                  permissions: {contents: "write"},
-                }),
-              },
-            );
-            if (!response.ok) {
-              throw new Error(`Cruz rechazó el pedido de token (${response.status})`);
-            }
-            const result = await response.json();
-            core.setSecret(result.token);
-            core.setOutput("token", result.token);
+          repositories: '["radiocutfm/fierro"]'
+          permissions: '{"contents":"write"}'
       - name: Disparar la reconstrucción integrada
         env:
           GH_TOKEN: ${{ steps.cruz-token.outputs.token }}
