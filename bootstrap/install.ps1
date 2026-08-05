@@ -18,4 +18,4 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
   irm https://astral.sh/uv/install.ps1 | iex
 }
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) { throw "No se pudo instalar uv." }
-uv run --with $wheelPath fierro-harness install
+uv run --python 3.14 --with $wheelPath fierro-harness install
