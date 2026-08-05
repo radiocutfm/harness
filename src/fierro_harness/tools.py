@@ -125,6 +125,40 @@ TOOLS = (
             }
         ),
     ),
+    ToolSpec(
+        "trello-cli",
+        "trello-cli",
+        "0.1.1",
+        "https://github.com/hammashamzah/trello-cli/releases/tag/v0.1.1",
+        MappingProxyType(
+            {
+                "linux": InstallPlan(
+                    (
+                        (
+                            "set -eu; d=$(mktemp -d); trap 'rm -rf \"$d\"' EXIT; "
+                            "curl -fL https://github.com/hammashamzah/trello-cli/releases/download/v0.1.1/"
+                            "trello-cli_0.1.1_linux_amd64.tar.gz -o \"$d/trello-cli.tar.gz\"; "
+                            "echo '3513723097cae8b169e477c4a9c12d5b1057b6eef99da6eadd5e6a33753a19de  $d/trello-cli.tar.gz' "
+                            "| sha256sum -c -; tar -xzf \"$d/trello-cli.tar.gz\" -C \"$d\" trello-cli; "
+                            "mkdir -p \"$HOME/.local/bin\"; install -m 0755 \"$d/trello-cli\" \"$HOME/.local/bin/trello-cli\""
+                        ),
+                    )
+                ),
+                "windows": InstallPlan(
+                    (
+                        (
+                            "$d = Join-Path $env:TEMP 'trello-cli.zip'; "
+                            "Invoke-WebRequest https://github.com/hammashamzah/trello-cli/releases/download/v0.1.1/"
+                            "trello-cli_0.1.1_windows_amd64.zip -OutFile $d; "
+                            "if ((Get-FileHash $d -Algorithm SHA256).Hash -ne '5B7D532005ED62C1D93B704969A86007834AB10B9C56457FB352692823CE7EF1') "
+                            "{ throw 'Checksum inválido' }; $bin = Join-Path $HOME '.local\\bin'; New-Item -ItemType Directory -Force $bin; "
+                            "Expand-Archive $d -DestinationPath $bin -Force"
+                        ),
+                    )
+                ),
+            }
+        ),
+    ),
 )
 TOOLS_BY_NAME = MappingProxyType({tool.name: tool for tool in TOOLS})
 

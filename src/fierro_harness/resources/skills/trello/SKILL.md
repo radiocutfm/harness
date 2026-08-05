@@ -1,22 +1,17 @@
 ---
 name: trello
-description: Consulta Trello mediante su API REST oficial y un script Python seguro.
+description: Consulta y opera Trello mediante una CLI integrada, con conexión guiada y credenciales protegidas.
 compatibility: opencode
 ---
 
-## Decisión
+## Conectar una cuenta
 
-Usá la API REST oficial de Trello a través de `scripts/trello.py`. No se adopta una CLI de terceros: la API tiene superficie, autenticación y límites publicados, mientras que el script conserva una interfaz intercambiable y ejecutable con `uv` en Linux y Windows.
+Antes de la primera consulta, seguí `references/conectar-trello.md`. Guiá a la persona paso a paso; no asumas que conoce términos técnicos ni le pidas configurar variables de entorno.
 
-## Uso
+## Consultar y cambiar datos
 
-- Pedí que el usuario exponga `TRELLO_API_KEY` y `TRELLO_API_TOKEN` en su sesión; nunca los pongas en comandos, archivos, logs o JSON.
-- Ejecutá `uv run scripts/trello.py boards`, `board <id>`, `lists <board-id>`, `cards <board-id>` o `search <texto>`.
-- La salida es JSON. Aplicá `--limit` para acotar colecciones y `--timeout` cuando corresponda.
-- Esta versión es sólo de lectura. Antes de proponer una futura escritura, mostrale al usuario el tablero, la lista, los registros afectados y el contenido completo, y pedí confirmación.
-
-## Límites y errores
-
-- El script reintenta respuestas transitorias y `429` con espera acotada. No implementes polling; para sincronizaciones futuras evaluá webhooks.
-- Si recibe `401` o `403`, informá el problema de autorización sin revelar los valores usados.
-- Consultá `references/api.md` antes de extender endpoints o autenticación.
+- Usá `trello-cli` para cada operación de Trello y pedí salida JSON con `-o json`.
+- Consultá antes de modificar. Para una escritura, mostrale a la persona el tablero, la lista, los elementos afectados y el resultado esperado.
+- Pedí confirmación explícita inmediatamente antes de crear, editar, mover, cerrar, comentar o adjuntar.
+- Usá `--dry-run` cuando esté disponible. No hagas operaciones destructivas masivas.
+- Ante un error de autorización o límite, explicá qué pasó sin mostrar claves, tokens, rutas de credenciales ni datos de otra cuenta.
