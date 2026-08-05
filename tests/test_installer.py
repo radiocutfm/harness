@@ -16,6 +16,7 @@ def test_install_is_idempotent_and_configures_model(tmp_path: Path, monkeypatch)
 
     assert installer.install() == 0
     assert (tmp_path / ".agents" / "skills" / "scripting-python" / "SKILL.md").exists()
+    assert (tmp_path / ".agents" / "skills" / "trello" / "references" / "conectar-trello.md").exists()
 
 
 def test_install_preserves_personal_model(tmp_path: Path, monkeypatch) -> None:
@@ -40,6 +41,12 @@ def test_jq_plan_uses_a_pinned_release_and_checksum() -> None:
     assert "jq-1.8.2" in plan[0]
     assert "sha256sum -c" in plan[1]
     assert "throw 'Checksum inválido'" in installation_plan(TOOLS_BY_NAME["jq"], system="Windows")[1]
+
+
+def test_plans_are_explicit_for_each_core_tool() -> None:
+    assert "astral.sh" in installation_plan(TOOLS_BY_NAME["uv"], system="Linux")[0]
+    assert "opencode-ai@1.18.13" in installation_plan(TOOLS_BY_NAME["opencode"], system="Linux")[0]
+    assert "trello-cli_0.1.1_linux_amd64" in installation_plan(TOOLS_BY_NAME["trello-cli"], system="Linux")[0]
 
 
 def test_platform_names_are_normalized_before_plan_lookup() -> None:

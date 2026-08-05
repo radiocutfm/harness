@@ -47,6 +47,22 @@ Si el usuario ya tiene otro modelo configurado, el instalador informa el conflic
 
 La automatización web con Playwright Python está definida en el issue #22 y todavía no forma parte de la instalación estable.
 
+## Trello
+
+La integración usa [`trello-cli`](https://github.com/hammashamzah/trello-cli). Para instalarla de forma explícita, ejecutá:
+
+```sh
+fierro-harness setup --install trello-cli --yes
+```
+
+Para conectar una cuenta, iniciá sesión en Trello, abrí [Power-Up administration](https://trello.com/power-ups/admin), creá un Power-Up y generá una API key en su pestaña **API key**. Luego ejecutá:
+
+```sh
+trello-cli auth login --key <api-key>
+```
+
+La herramienta abre Trello para aprobar el acceso. Comprobá la cuenta conectada con `trello-cli auth whoami -o json`.
+
 ## Seguridad
 
 No incluir tokens, cookies, contraseñas, prompts ni datos de clientes en este repositorio. Las acciones de escritura en servicios externos deben pedir confirmación y mostrar previamente el destino y el alcance.
