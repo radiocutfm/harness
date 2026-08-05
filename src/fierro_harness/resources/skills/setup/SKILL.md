@@ -9,7 +9,7 @@ metadata:
 
 ## Propósito
 
-Usá esta skill cuando el usuario quiera preparar el entorno completo o comprobar qué integraciones puede utilizar. Debe reunir las herramientas declaradas por las skills habilitadas y ejecutar su instalación o verificación mediante el instalador del harness.
+Usá esta skill cuando el usuario quiera preparar el entorno completo o comprobar qué integraciones puede utilizar. Consultá `fierro-harness setup --json` para conocer el estado actual.
 
 ## Reglas
 
@@ -20,6 +20,14 @@ Usá esta skill cuando el usuario quiera preparar el entorno completo o comproba
 - Verificá plataforma, versión, autenticación y salida JSON cuando corresponda.
 - No solicites ni guardes tokens en archivos del repositorio.
 - Si una herramienta no tiene instalador confiable, informá el bloqueo y no improvises una descarga.
+
+## Instalación explícita
+
+- Mostrá primero el plan con `fierro-harness setup --install <herramienta>`.
+- Sólo después de que el usuario confirme, ejecutá `fierro-harness setup --install <herramienta> --yes`.
+- Para preparar todas las herramientas habilitadas, usá `--install all`; la misma confirmación aplica.
+- Usá `--dry-run` junto con `--yes` para validar el plan sin modificar el equipo.
+- El comando sólo instala herramientas seleccionadas explícitamente. No instala una integración al cargar esta skill.
 
 ## Resultado
 
