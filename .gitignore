@@ -7,4 +7,5 @@ build/
 *.egg-info/
 .harness-state/
 .env
-
+.coverage
+docs/_build/

@@ -5,4 +5,3 @@ compatibility: opencode
 ---
 
 Implementación pendiente. Documentar versión mínima, instalación, autenticación, salida JSON y permisos por operación.
-

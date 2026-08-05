@@ -1,0 +1,87 @@
+name: Documentación
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "Makefile"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/docs.yml"
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "Makefile"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/docs.yml"
+
+jobs:
+  build-docs:
+    name: Validar documentación
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Crear token para leer el inventario de Fierro
+        id: app-token
+        if: github.event_name != 'pull_request'
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.CRUZ_APP_ID }}
+          private-key: ${{ secrets.CRUZ_APP_PRIVATE_KEY }}
+          owner: radiocutfm
+          repositories: fierro
+          permission-contents: read
+      - name: Descargar el inventario de Fierro
+        if: github.event_name != 'pull_request'
+        uses: actions/checkout@v6
+        with:
+          repository: radiocutfm/fierro
+          ref: develop
+          path: fierro-docs
+          token: ${{ steps.app-token.outputs.token || github.token }}
+          sparse-checkout: docs/_intersphinx/fierro.inv
+          sparse-checkout-cone-mode: false
+      - uses: astral-sh/setup-uv@v8.2.0
+      - name: Compilar documentación del PR
+        if: github.event_name == 'pull_request'
+        env:
+          INTERSPHINX_FIERRO_INVENTORY: ${{ github.workspace }}/docs/_intersphinx/fierro.inv
+        run: make docs
+      - name: Compilar documentación integrada
+        if: github.event_name != 'pull_request'
+        env:
+          INTERSPHINX_FIERRO_INVENTORY: ${{ github.workspace }}/fierro-docs/docs/_intersphinx/fierro.inv
+        run: make docs
+
+  dispatch-fierro:
+    name: Notificar a Fierro
+    needs: build-docs
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Crear token para publicar el dispatch
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.CRUZ_APP_ID }}
+          private-key: ${{ secrets.CRUZ_APP_PRIVATE_KEY }}
+          owner: radiocutfm
+          repositories: fierro
+          permission-contents: write
+      - name: Disparar la reconstrucción integrada
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh api repos/radiocutfm/fierro/dispatches --method POST --input - <<JSON
+          {
+            "event_type": "external-docs-updated",
+            "client_payload": {
+              "source": "harness",
+              "ref": "${GITHUB_REF_NAME}",
+              "sha": "${GITHUB_SHA}"
+            }
+          }
+          JSON

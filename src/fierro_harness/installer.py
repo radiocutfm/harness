@@ -10,6 +10,7 @@ import tempfile
 from datetime import UTC, datetime
 from importlib.resources import as_file, files
 from pathlib import Path
+from typing import cast
 
 DEFAULT_MODEL = "deepseek/deepseek-v4-flash"
 
@@ -76,8 +77,10 @@ def configure_opencode(dry_run: bool) -> int:
             print(f"No se pudo leer el registro administrado: {error}", file=sys.stderr)
             return 1
 
-    managed = state.get("managed", {})
-    previous = state.get("previous", {})
+    managed_value = state.get("managed", {})
+    managed = managed_value if isinstance(managed_value, dict) else {}
+    previous_value = state.get("previous", {})
+    previous = cast("dict[str, object]", previous_value) if isinstance(previous_value, dict) else {}
     owns_model = isinstance(managed, dict) and managed.get("model") == DEFAULT_MODEL
     if "model" in config and config["model"] != DEFAULT_MODEL and not owns_model:
         print(f"Conflicto: OpenCode ya define model={config['model']!r}; no se reemplaza.", file=sys.stderr)

@@ -5,4 +5,3 @@ compatibility: opencode
 ---
 
 Implementación pendiente. Documentar versión mínima de `gog`, autenticación, paginación y operaciones destructivas antes de habilitar escrituras.
-

@@ -47,6 +47,11 @@ Si el usuario ya tiene otro modelo configurado, el instalador informa el conflic
 
 La automatización web con Playwright Python está definida en el issue #22 y todavía no forma parte de la instalación estable.
 
+## Documentación
+
+La documentación técnica se mantiene en `docs/` y se publica dentro del sitio
+federado de Fierro. Para validarla localmente ejecutá `make docs`.
+
 ## OpenCode Desktop
 
 OpenCode Desktop y la CLI `opencode` son herramientas independientes. Para instalar la aplicación de escritorio de forma explícita en Windows x64 o Linux, ejecutá:

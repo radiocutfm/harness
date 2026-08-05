@@ -5,4 +5,3 @@ compatibility: opencode
 ---
 
 Implementación pendiente. Seleccionar CLI o MCP y documentar versión, autenticación, referencias y límites de lectura.
-
