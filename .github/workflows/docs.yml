@@ -17,6 +17,8 @@ on:
       - "pyproject.toml"
       - "uv.lock"
       - ".github/workflows/docs.yml"
+  release:
+    types: [published]
 
 jobs:
   build-docs:
@@ -59,7 +61,7 @@ jobs:
   dispatch-fierro:
     name: Notificar a Fierro
     needs: build-docs
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
       - name: Crear token para publicar el dispatch
