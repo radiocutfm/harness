@@ -1,0 +1,54 @@
+name: Token efímero de Cruz
+description: Intercambia la identidad OIDC del workflow por un token acotado de GitHub App
+
+inputs:
+  repositories:
+    description: Lista JSON de repositorios owner/repo habilitados para el token
+    required: true
+  permissions:
+    description: Objeto JSON con los permisos solicitados a la GitHub App
+    required: true
+  cruz-url:
+    description: URL pública de Cruz usada también como audience OIDC
+    required: false
+    default: https://cruz.fierro.com.ar
+
+outputs:
+  token:
+    description: Installation token efímero
+    value: ${{ steps.request-token.outputs.token }}
+  expires-at:
+    description: Vencimiento informado por GitHub
+    value: ${{ steps.request-token.outputs.expires-at }}
+
+runs:
+  using: composite
+  steps:
+    - name: Solicitar token acotado a Cruz
+      id: request-token
+      uses: actions/github-script@v8
+      env:
+        CRUZ_URL: ${{ inputs.cruz-url }}
+        REPOSITORIES: ${{ inputs.repositories }}
+        PERMISSIONS: ${{ inputs.permissions }}
+      with:
+        script: |
+          const repositories = JSON.parse(process.env.REPOSITORIES);
+          const permissions = JSON.parse(process.env.PERMISSIONS);
+          const cruzUrl = process.env.CRUZ_URL.replace(/\/$/, "");
+          const oidcToken = await core.getIDToken(cruzUrl);
+          const response = await fetch(`${cruzUrl}/github/installation-token`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${oidcToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({repositories, permissions}),
+          });
+          if (!response.ok) {
+            throw new Error(`Cruz rechazó el pedido de token (${response.status})`);
+          }
+          const result = await response.json();
+          core.setSecret(result.token);
+          core.setOutput("token", result.token);
+          core.setOutput("expires-at", result.expires_at);

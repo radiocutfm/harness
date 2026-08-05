@@ -8,6 +8,7 @@ on:
       - "Makefile"
       - "pyproject.toml"
       - "uv.lock"
+      - ".github/actions/cruz-installation-token/**"
       - ".github/workflows/docs.yml"
   push:
     branches: [main]
@@ -16,6 +17,7 @@ on:
       - "Makefile"
       - "pyproject.toml"
       - "uv.lock"
+      - ".github/actions/cruz-installation-token/**"
       - ".github/workflows/docs.yml"
   release:
     types: [published]
@@ -24,18 +26,18 @@ jobs:
   build-docs:
     name: Validar documentación
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v6
-      - name: Crear token para leer el inventario de Fierro
-        id: app-token
+      - name: Solicitar token de lectura a Cruz
+        id: cruz-token
         if: github.event_name != 'pull_request'
-        uses: actions/create-github-app-token@v3
+        uses: ./.github/actions/cruz-installation-token
         with:
-          client-id: ${{ vars.CRUZ_APP_ID }}
-          private-key: ${{ secrets.CRUZ_APP_PRIVATE_KEY }}
-          owner: radiocutfm
-          repositories: fierro
-          permission-contents: read
+          repositories: '["radiocutfm/fierro"]'
+          permissions: '{"contents":"read"}'
       - name: Descargar el inventario de Fierro
         if: github.event_name != 'pull_request'
         uses: actions/checkout@v6
@@ -43,7 +45,7 @@ jobs:
           repository: radiocutfm/fierro
           ref: develop
           path: fierro-docs
-          token: ${{ steps.app-token.outputs.token || github.token }}
+          token: ${{ steps.cruz-token.outputs.token || github.token }}
           sparse-checkout: docs/_intersphinx/fierro.inv
           sparse-checkout-cone-mode: false
       - uses: astral-sh/setup-uv@v8.2.0
@@ -63,19 +65,20 @@ jobs:
     needs: build-docs
     if: github.event_name == 'push' || github.event_name == 'release'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - name: Crear token para publicar el dispatch
-        id: app-token
-        uses: actions/create-github-app-token@v3
+      - uses: actions/checkout@v6
+      - name: Solicitar token de escritura a Cruz
+        id: cruz-token
+        uses: ./.github/actions/cruz-installation-token
         with:
-          client-id: ${{ vars.CRUZ_APP_ID }}
-          private-key: ${{ secrets.CRUZ_APP_PRIVATE_KEY }}
-          owner: radiocutfm
-          repositories: fierro
-          permission-contents: write
+          repositories: '["radiocutfm/fierro"]'
+          permissions: '{"contents":"write"}'
       - name: Disparar la reconstrucción integrada
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.cruz-token.outputs.token }}
         run: |
           gh api repos/radiocutfm/fierro/dispatches --method POST --input - <<JSON
           {
