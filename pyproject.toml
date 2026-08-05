@@ -5,7 +5,7 @@ description = "Fierro corporate harness for OpenCode skills and configuration"
 readme = "README.md"
 requires-python = ">=3.14"
 authors = [{ name = "Lambda Sistemas SRL" }]
-dependencies = []
+dependencies = ["typer==0.27.0"]
 
 [project.scripts]
 fierro-harness = "fierro_harness.cli:main"

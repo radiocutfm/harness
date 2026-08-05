@@ -3,8 +3,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from typer.testing import CliRunner
+
 from fierro_harness import installer
+from fierro_harness.cli import app
 from fierro_harness.tools import TOOLS_BY_NAME, installation_plan, normalize_system, version_at_least
+
+runner = CliRunner()
 
 
 def test_install_is_idempotent_and_configures_model(tmp_path: Path, monkeypatch) -> None:
@@ -49,6 +54,18 @@ def test_platform_names_are_normalized_before_plan_lookup() -> None:
     assert "install.sh" in TOOLS_BY_NAME["uv"].installation_plan("Darwin").commands[0]
     assert TOOLS_BY_NAME["jq"].supports("Darwin")
     assert "jq-macos" in installation_plan(TOOLS_BY_NAME["jq"], system="Darwin")[0]
+
+
+def test_typer_cli_renders_a_tool_plan() -> None:
+    result = runner.invoke(app, ["tools", "--plan", "jq"])
+    assert result.exit_code == 0
+    assert "jq-1.8.2" in result.output
+
+
+def test_typer_cli_rejects_unknown_tool_plan() -> None:
+    result = runner.invoke(app, ["tools", "--plan", "unknown"])
+    assert result.exit_code == 2
+    assert "unknown tool" in result.output
 
 
 def test_plans_are_explicit_for_each_core_tool() -> None:
