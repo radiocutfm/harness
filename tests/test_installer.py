@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from fierro_harness import installer
-from fierro_harness.tools import ToolSpec, installation_plan, version_at_least
+from fierro_harness.tools import TOOLS_BY_NAME, installation_plan, normalize_system, version_at_least
 
 
 def test_install_is_idempotent_and_configures_model(tmp_path: Path, monkeypatch) -> None:
@@ -36,6 +36,11 @@ def test_version_at_least_handles_prefixes_and_suffixes() -> None:
 
 
 def test_jq_plan_uses_a_pinned_release_and_checksum() -> None:
-    plan = installation_plan(ToolSpec("jq", "jq", "1.8.2", ""), system="Linux")
+    plan = installation_plan(TOOLS_BY_NAME["jq"], system="Linux")
     assert "jq-1.8.2" in plan[0]
     assert "sha256sum -c" in plan[1]
+
+
+def test_platform_names_are_normalized_before_plan_lookup() -> None:
+    assert normalize_system("Darwin") == "macos"
+    assert "install.sh" in TOOLS_BY_NAME["uv"].installation_plan("Darwin").commands[0]

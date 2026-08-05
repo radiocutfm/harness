@@ -7,8 +7,16 @@ import platform
 import re
 import shutil
 import subprocess
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
+from types import MappingProxyType
+
+
+@dataclass(frozen=True)
+class InstallPlan:
+    """Reviewed commands for installing one tool on one platform."""
+
+    commands: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -19,6 +27,15 @@ class ToolSpec:
     command: str
     minimum_version: str
     source: str
+    install_plans: Mapping[str, InstallPlan]
+
+    def installation_plan(self, system: str | None = None) -> InstallPlan:
+        """Return the reviewed plan for a supported platform."""
+        normalized = normalize_system(system or platform.system())
+        try:
+            return self.install_plans[normalized]
+        except KeyError:
+            raise ValueError(f"{self.name!r} is not supported on {normalized!r}") from None
 
 
 @dataclass(frozen=True)
@@ -34,11 +51,70 @@ class ToolStatus:
     error: str | None = None
 
 
+def normalize_system(system: str) -> str:
+    """Normalize Python platform names to the harness vocabulary."""
+    aliases = {"linux": "linux", "windows": "windows", "darwin": "macos"}
+    try:
+        return aliases[system.lower()]
+    except KeyError:
+        raise ValueError(f"Unsupported platform: {system!r}") from None
+
+
 TOOLS = (
-    ToolSpec("uv", "uv", "0.11.0", "https://docs.astral.sh/uv/getting-started/installation/"),
-    ToolSpec("opencode", "opencode", "1.18.13", "https://opencode.ai/en/docs"),
-    ToolSpec("jq", "jq", "1.8.2", "https://github.com/jqlang/jq/releases/tag/jq-1.8.2"),
+    ToolSpec(
+        "uv",
+        "uv",
+        "0.11.0",
+        "https://docs.astral.sh/uv/getting-started/installation/",
+        MappingProxyType(
+            {
+                "linux": InstallPlan(("curl -LsSf https://astral.sh/uv/0.12.1/install.sh | sh",)),
+                "macos": InstallPlan(("curl -LsSf https://astral.sh/uv/0.12.1/install.sh | sh",)),
+                "windows": InstallPlan(
+                    ('powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/0.12.1/install.ps1 | iex"',)
+                ),
+            }
+        ),
+    ),
+    ToolSpec(
+        "opencode",
+        "opencode",
+        "1.18.13",
+        "https://opencode.ai/en/docs",
+        MappingProxyType(
+            {
+                "linux": InstallPlan(("npm install -g opencode-ai@1.18.13",)),
+                "macos": InstallPlan(("npm install -g opencode-ai@1.18.13",)),
+                "windows": InstallPlan(("npm install -g opencode-ai@1.18.13",)),
+            }
+        ),
+    ),
+    ToolSpec(
+        "jq",
+        "jq",
+        "1.8.2",
+        "https://github.com/jqlang/jq/releases/tag/jq-1.8.2",
+        MappingProxyType(
+            {
+                "linux": InstallPlan(
+                    (
+                        "curl -fL https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-amd64 -o jq",
+                        "echo 'b1c22172dd303f3be49e935aa56aa48a8b7a46e0bc838b4997d3bb451495870f  jq' | sha256sum -c -",
+                        "mkdir -p ~/.local/bin",
+                        "install -m 0755 jq ~/.local/bin/jq",
+                    )
+                ),
+                "windows": InstallPlan(
+                    (
+                        "Invoke-WebRequest https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-windows-amd64.exe -OutFile jq.exe",
+                        "(Get-FileHash jq.exe -Algorithm SHA256).Hash -eq 'A6FC67FEDAF9128A3309A1E2EBB8B986AECCF70122EE46D2CB4849E423F0C627'",
+                    )
+                ),
+            }
+        ),
+    ),
 )
+TOOLS_BY_NAME = MappingProxyType({tool.name: tool for tool in TOOLS})
 
 
 def version_at_least(actual: str, minimum: str) -> bool:
@@ -81,29 +157,9 @@ def inspect_tools() -> list[ToolStatus]:
     return [inspect_tool(spec) for spec in TOOLS]
 
 
-def installation_plan(spec: ToolSpec, system: str | None = None) -> list[str]:
-    """Return only reviewed, user-visible installation commands for a platform."""
-    system = (system or platform.system()).lower()
-    if spec.name == "uv":
-        if system == "windows":
-            return ['powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/0.12.1/install.ps1 | iex"']
-        return ["curl -LsSf https://astral.sh/uv/0.12.1/install.sh | sh"]
-    if spec.name == "opencode":
-        if system == "windows":
-            return ["npm install -g opencode-ai"]
-        return ["curl -fsSL https://opencode.ai/install | bash"]
-    if spec.name == "jq":
-        if system == "windows":
-            return [
-                "Invoke-WebRequest https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-windows-amd64.exe -OutFile jq.exe",
-                "(Get-FileHash jq.exe -Algorithm SHA256).Hash -eq 'A6FC67FEDAF9128A3309A1E2EBB8B986AECCF70122EE46D2CB4849E423F0C627'",
-            ]
-        return [
-            "curl -fL https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-amd64 -o jq",
-            "echo 'b1c22172dd303f3be49e935aa56aa48a8b7a46e0bc838b4997d3bb451495870f  jq' | sha256sum -c -",
-            "install -m 0755 jq ~/.local/bin/jq",
-        ]
-    raise ValueError(f"Unknown tool: {spec.name}")
+def installation_plan(spec: ToolSpec, system: str | None = None) -> tuple[str, ...]:
+    """Compatibility wrapper for callers that need only the command sequence."""
+    return spec.installation_plan(system).commands
 
 
 def tool_status_json() -> str:
