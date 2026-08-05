@@ -1,6 +1,6 @@
 [project]
 name = "fierro-harness"
-version = "0.1.0"
+version = "0.2.0"
 description = "Fierro corporate harness for OpenCode skills and configuration"
 readme = "README.md"
 requires-python = ">=3.14"
