@@ -8,10 +8,13 @@ import platform
 import re
 import shutil
 import subprocess
-from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from types import MappingProxyType
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
 
 
 @dataclass(frozen=True)
@@ -122,7 +125,7 @@ TOOLS = (
                 ),
                 "macos": InstallPlan(
                     (
-                        "set -eu; case \"$(uname -m)\" in arm64) asset=jq-macos-arm64; sum=2d75340ba57a4b4b4c8708a21c2dc8e958a48aaa8bba13b27f77f6e4c0eca07e ;; x86_64) asset=jq-macos-amd64; sum=e94b266e3c26690550006abe63152b782280f4e14374accdf04cbde844f00bc0 ;; *) echo 'Arquitectura no soportada' >&2; exit 1 ;; esac; curl -fL \"https://github.com/jqlang/jq/releases/download/jq-1.8.2/$asset\" -o jq; echo \"$sum  jq\" | shasum -a 256 -c -; mkdir -p ~/.local/bin; install -m 0755 jq ~/.local/bin/jq",
+                        'set -eu; case "$(uname -m)" in arm64) asset=jq-macos-arm64; sum=2d75340ba57a4b4b4c8708a21c2dc8e958a48aaa8bba13b27f77f6e4c0eca07e ;; x86_64) asset=jq-macos-amd64; sum=e94b266e3c26690550006abe63152b782280f4e14374accdf04cbde844f00bc0 ;; *) echo \'Arquitectura no soportada\' >&2; exit 1 ;; esac; curl -fL "https://github.com/jqlang/jq/releases/download/jq-1.8.2/$asset" -o jq; echo "$sum  jq" | shasum -a 256 -c -; mkdir -p ~/.local/bin; install -m 0755 jq ~/.local/bin/jq',
                     )
                 ),
             }
@@ -140,10 +143,10 @@ TOOLS = (
                         (
                             "set -eu; d=$(mktemp -d); trap 'rm -rf \"$d\"' EXIT; "
                             "curl -fL https://github.com/hammashamzah/trello-cli/releases/download/v0.1.1/"
-                            "trello-cli_0.1.1_linux_amd64.tar.gz -o \"$d/trello-cli.tar.gz\"; "
+                            'trello-cli_0.1.1_linux_amd64.tar.gz -o "$d/trello-cli.tar.gz"; '
                             "echo '3513723097cae8b169e477c4a9c12d5b1057b6eef99da6eadd5e6a33753a19de  $d/trello-cli.tar.gz' "
-                            "| sha256sum -c -; tar -xzf \"$d/trello-cli.tar.gz\" -C \"$d\" trello-cli; "
-                            "mkdir -p \"$HOME/.local/bin\"; install -m 0755 \"$d/trello-cli\" \"$HOME/.local/bin/trello-cli\""
+                            '| sha256sum -c -; tar -xzf "$d/trello-cli.tar.gz" -C "$d" trello-cli; '
+                            'mkdir -p "$HOME/.local/bin"; install -m 0755 "$d/trello-cli" "$HOME/.local/bin/trello-cli"'
                         ),
                     )
                 ),
@@ -182,17 +185,17 @@ TOOLS = (
                             "sum=cc7e557c740fae9a6299dddd0737ad4240e854ce61e45afc015af0e181ad9a94; "
                             "manager=rpm; "
                             "else echo 'No se encontró dpkg ni rpm; instalá OpenCode Desktop manualmente.' >&2; exit 1; fi; "
-                            "curl -fL \"https://github.com/anomalyco/opencode/releases/download/v1.18.13/$asset\" "
-                            "-o \"$d/$asset\"; echo \"$sum  $d/$asset\" | sha256sum -c -; "
-                            "if [ \"$manager\" = deb ]; then sudo dpkg -i \"$d/$asset\"; "
-                            "else sudo rpm -Uvh \"$d/$asset\"; fi"
+                            'curl -fL "https://github.com/anomalyco/opencode/releases/download/v1.18.13/$asset" '
+                            '-o "$d/$asset"; echo "$sum  $d/$asset" | sha256sum -c -; '
+                            'if [ "$manager" = deb ]; then sudo dpkg -i "$d/$asset"; '
+                            'else sudo rpm -Uvh "$d/$asset"; fi'
                         ),
                     )
                 ),
                 "windows": InstallPlan(
                     (
                         (
-                            "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$d = Join-Path $env:TEMP "
+                            'powershell -NoProfile -ExecutionPolicy Bypass -Command "$d = Join-Path $env:TEMP '
                             "'opencode-desktop-win-x64.exe'; Invoke-WebRequest -Uri "
                             "https://github.com/anomalyco/opencode/releases/download/v1.18.13/"
                             "opencode-desktop-win-x64.exe -OutFile $d; if ((Get-FileHash $d -Algorithm SHA256).Hash "
@@ -219,7 +222,10 @@ TOOLS_BY_NAME = MappingProxyType({tool.name: tool for tool in TOOLS})
 
 def version_at_least(actual: str, minimum: str) -> bool:
     """Compare numeric version prefixes without assuming a tool's suffix format."""
-    numbers = lambda value: tuple(int(part) for part in re.findall(r"\d+", value))
+
+    def numbers(value: str) -> tuple[int, ...]:
+        return tuple(int(part) for part in re.findall(r"\d+", value))
+
     current, required = numbers(actual), numbers(minimum)
     if not current:
         return False
@@ -227,7 +233,8 @@ def version_at_least(actual: str, minimum: str) -> bool:
 
 
 def _version_command(spec: ToolSpec) -> list[str]:
-    assert spec.command is not None
+    if spec.command is None:
+        raise ValueError(f"{spec.name!r} no tiene un comando de versión")
     return [spec.command, "--version"]
 
 
@@ -239,9 +246,10 @@ def _detection_path(spec: ToolSpec) -> Path | None:
         return None
     replacements = {
         "{localappdata}": os.environ.get("LOCALAPPDATA", ""),
-        "{programfiles}": os.environ.get("ProgramFiles", ""),
+        "{programfiles}": os.environ.get("PROGRAMFILES", ""),
     }
-    for value in spec.detection_paths.get(system, ()):
+    for raw_value in spec.detection_paths.get(system, ()):
+        value = raw_value
         for placeholder, replacement in replacements.items():
             value = value.replace(placeholder, replacement)
         path = Path(value).expanduser()
@@ -250,7 +258,11 @@ def _detection_path(spec: ToolSpec) -> Path | None:
     return None
 
 
-def inspect_tool(spec: ToolSpec, *, run: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run) -> ToolStatus:
+def inspect_tool(
+    spec: ToolSpec,
+    *,
+    run: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+) -> ToolStatus:
     """Check a tool without changing the host system."""
     supported = spec.supports()
     if spec.command is None:
@@ -274,7 +286,15 @@ def inspect_tool(spec: ToolSpec, *, run: Callable[..., subprocess.CompletedProce
         return ToolStatus(spec.name, spec.minimum_version, False, None, supported, spec.source, str(error))
     output = (result.stdout or result.stderr).strip()
     if result.returncode != 0:
-        return ToolStatus(spec.name, spec.minimum_version, False, None, supported, spec.source, output or "version command failed")
+        return ToolStatus(
+            spec.name,
+            spec.minimum_version,
+            False,
+            None,
+            supported,
+            spec.source,
+            output or "version command failed",
+        )
     installed = version_at_least(output, spec.minimum_version)
     return ToolStatus(
         spec.name,
@@ -307,4 +327,4 @@ def install_tool(spec: ToolSpec, *, system: str | None = None, dry_run: bool = F
     for command in installation_plan(spec, system):
         print(f"Install: {command}")
         if not dry_run:
-            subprocess.run(command, shell=True, check=True)
+            subprocess.run(command, shell=True, check=True)  # noqa: S602

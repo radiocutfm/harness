@@ -19,14 +19,99 @@ build-backend = "uv_build"
 module-name = "fierro_harness"
 module-root = "src"
 
+[tool.ty.src]
+exclude = [".worktrees/", ".external-worktrees/"]
+
 [dependency-groups]
 dev = [
-  "pytest>=9.0",
-  "ruff>=0.16",
+    { include-group = "docs" },
+    { include-group = "qa" },
+    { include-group = "test" },
+]
+docs = [
+    "linkify-it-py>=2.0.3",
+    "myst-parser>=4.0.1",
+    "sphinx>=8.2",
+    "sphinx-book-theme>=1.1.4",
+    "sphinx-design>=0.6.1",
+    "sphinxcontrib-mermaid>=1.0.0",
+]
+lint = [
+    "ruff>=0.16",
+]
+qa = [
+    { include-group = "lint" },
+    "ty>=0.0.61",
+]
+test = [
+    "pytest>=9.0",
+    "pytest-cov>=7.1",
 ]
 
 [tool.ruff]
 line-length = 120
+extend-exclude = ["src/fierro_harness/resources/"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "C90",    # mccabe complexity
+    "A",      # flake8-builtins
+    "ANN",    # flake8-annotations
+    "UP",     # pyupgrade
+    "RUF",    # Ruff-specific rules
+    "T10",    # flake8-debugger
+    "ISC",    # implicit string concatenation
+    "SIM",    # flake8-simplify
+    "ASYNC",  # flake8-async
+    "ERA",    # eradicate
+    "TRY",    # tryceratops
+    "YTT",    # flake8-2020
+    "BLE",    # flake8-blind-except
+    "B",      # flake8-bugbear
+    "EXE",    # flake8-executable
+    "FA",     # flake8-future-annotations
+    "C4",     # flake8-comprehensions
+    "DTZ",    # flake8-datetimez
+    "FBT",    # flake8-boolean-trap
+    "INT",    # flake8-gettext
+    "LOG",    # flake8-logging
+    "S",      # flake8-bandit
+    "G",      # flake8-logging-format
+    "FLY",    # flynt
+    "N",      # pep8-naming
+    "PIE",    # flake8-pie
+    "PYI",    # flake8-pyi
+    "PT",     # flake8-pytest-style
+    "TC",     # flake8-type-checking
+    "PTH",    # flake8-use-pathlib
+    "PERF",   # perflint
+    "D",      # pydocstyle
+    "PGH",    # pygrep-hooks
+    "PL",     # pylint
+    "FURB",   # refurb
+    "RET",    # flake8-return
+    "TID252", # relative imports
+]
+ignore = ["D203", "D213"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["ANN", "D", "FBT003", "PIE807", "PLR2004", "S101"]
+"src/fierro_harness/cli.py" = ["FBT", "TRY003"]
+"src/fierro_harness/installer.py" = ["C901", "FBT001", "PLR0911", "TRY003"]
+"docs/conf.py" = ["A", "D100"]
+"src/fierro_harness/tools.py" = ["E501", "FBT003", "TRY003"]
 
 [tool.pytest.ini_options]
+addopts = [
+    "--cov=fierro_harness",
+    "--cov-report=term-missing",
+    "--cov-fail-under=100",
+    "--strict-config",
+    "--strict-markers",
+    "-ra",
+]
 testpaths = ["tests"]

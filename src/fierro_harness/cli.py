@@ -13,7 +13,11 @@ from . import __version__
 from .installer import install as reconcile_install
 from .tools import TOOLS, inspect_tools, install_tool, installation_plan
 
-app = typer.Typer(add_completion=False, help="Instala y prepara las herramientas de Fierro Harness.", rich_markup_mode=None)
+app = typer.Typer(
+    add_completion=False,
+    help="Instala y prepara las herramientas de Fierro Harness.",
+    rich_markup_mode=None,
+)
 
 
 def version_callback(value: bool) -> None:
