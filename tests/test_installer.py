@@ -5,7 +5,7 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from fierro_harness import installer
+from fierro_harness import installer, tools
 from fierro_harness.cli import app
 from fierro_harness.tools import TOOLS_BY_NAME, installation_plan, normalize_system, version_at_least
 
@@ -71,3 +71,40 @@ def test_typer_cli_rejects_unknown_tool_plan() -> None:
 def test_plans_are_explicit_for_each_core_tool() -> None:
     assert "astral.sh" in installation_plan(TOOLS_BY_NAME["uv"], system="Linux")[0]
     assert "opencode-ai@1.18.13" in installation_plan(TOOLS_BY_NAME["opencode"], system="Linux")[0]
+
+
+def test_opencode_desktop_plans_use_official_pinned_artifacts_and_checksums() -> None:
+    linux_plan = installation_plan(TOOLS_BY_NAME["opencode-desktop"], system="Linux")[0]
+    windows_plan = installation_plan(TOOLS_BY_NAME["opencode-desktop"], system="Windows")[0]
+
+    assert "opencode-desktop-linux-amd64.deb" in linux_plan
+    assert "opencode-desktop-linux-x86_64.rpm" in linux_plan
+    assert "sha256sum -c" in linux_plan
+    assert "sudo dpkg -i" in linux_plan
+    assert "opencode-desktop-win-x64.exe" in windows_plan
+    assert "Get-FileHash" in windows_plan
+
+
+def test_opencode_desktop_is_detected_without_a_path_command(tmp_path: Path, monkeypatch) -> None:
+    application = tmp_path / "Programs" / "OpenCode" / "OpenCode.exe"
+    application.parent.mkdir(parents=True)
+    application.touch()
+    monkeypatch.setattr(tools.platform, "system", lambda: "Windows")
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
+
+    status = tools.inspect_tool(TOOLS_BY_NAME["opencode-desktop"])
+
+    assert status.installed
+    assert status.version is None
+    assert status.error is None
+
+
+def test_setup_allows_environment_confirmation(monkeypatch) -> None:
+    installed: list[str] = []
+    monkeypatch.setenv("FIERRO_HARNESS_ASSUME_YES", "1")
+    monkeypatch.setattr("fierro_harness.cli.install_tool", lambda tool, dry_run: installed.append(tool.name))
+
+    result = runner.invoke(app, ["setup", "--install", "opencode-desktop"])
+
+    assert result.exit_code == 0
+    assert installed == ["opencode-desktop"]

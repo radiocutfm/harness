@@ -47,6 +47,16 @@ Si el usuario ya tiene otro modelo configurado, el instalador informa el conflic
 
 La automatización web con Playwright Python está definida en el issue #22 y todavía no forma parte de la instalación estable.
 
+## OpenCode Desktop
+
+OpenCode Desktop y la CLI `opencode` son herramientas independientes. Para instalar la aplicación de escritorio de forma explícita en Windows x64 o Linux, ejecutá:
+
+```sh
+fierro-harness setup --install opencode-desktop --yes
+```
+
+El plan descarga el instalador publicado por OpenCode, comprueba su SHA-256 y luego lo ejecuta. En Linux requiere permiso de `sudo` para instalar el paquete `.deb` o `.rpm`; si el equipo no tiene `dpkg` ni `rpm`, o una política corporativa bloquea instaladores, la instalación debe realizarla el área administradora. Para automatizaciones sin interacción, usá `FIERRO_HARNESS_ASSUME_YES=1` junto con `--install`.
+
 ## Trello
 
 La integración usa [`trello-cli`](https://github.com/hammashamzah/trello-cli). Para instalarla de forma explícita, ejecutá:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import asdict
 from typing import Annotated
 
@@ -93,12 +94,14 @@ def setup(
                 state = "correcta" if status.installed else "pendiente"
                 typer.echo(f"{status.name}: {state}; minimum={status.minimum_version}; source={status.source}")
         raise typer.Exit(0 if all(status.installed for status in statuses) else 1)
-    if not yes:
+    confirmed = yes or os.environ.get("FIERRO_HARNESS_ASSUME_YES") == "1"
+    if not confirmed:
         for tool in selected:
             typer.echo(f"{tool.name} ({tool.minimum_version} o posterior):")
             for command in installation_plan(tool):
                 typer.echo(f"  {command}")
         typer.echo("Volvé a ejecutar con --yes para confirmar la instalación.")
+        typer.echo("En automatizaciones, usá FIERRO_HARNESS_ASSUME_YES=1.")
         raise typer.Exit(1)
     for tool in selected:
         install_tool(tool, dry_run=dry_run)

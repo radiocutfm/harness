@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import json
+import os
 import platform
 import re
 import shutil
 import subprocess
 from collections.abc import Callable, Mapping
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from types import MappingProxyType
 
 
@@ -21,13 +23,14 @@ class InstallPlan:
 
 @dataclass(frozen=True)
 class ToolSpec:
-    """The stable contract for a command used by one or more skills."""
+    """The stable contract for a command or desktop application used by skills."""
 
     name: str
-    command: str
+    command: str | None
     minimum_version: str
     source: str
     install_plans: Mapping[str, InstallPlan]
+    detection_paths: Mapping[str, tuple[str, ...]] = field(default_factory=lambda: MappingProxyType({}))
 
     def installation_plan(self, system: str | None = None) -> InstallPlan:
         """Return the reviewed plan for a supported platform."""
@@ -159,6 +162,57 @@ TOOLS = (
             }
         ),
     ),
+    ToolSpec(
+        "opencode-desktop",
+        None,
+        "1.18.13",
+        "https://opencode.ai/download",
+        MappingProxyType(
+            {
+                "linux": InstallPlan(
+                    (
+                        (
+                            "set -eu; d=$(mktemp -d); trap 'rm -rf \"$d\"' EXIT; "
+                            "if command -v dpkg >/dev/null 2>&1; then "
+                            "asset=opencode-desktop-linux-amd64.deb; "
+                            "sum=125b625886a841f9c8fd9e402f8f1bf8b14a6e08446d313bc0a0dfc693335697; "
+                            "manager=deb; "
+                            "elif command -v rpm >/dev/null 2>&1; then "
+                            "asset=opencode-desktop-linux-x86_64.rpm; "
+                            "sum=cc7e557c740fae9a6299dddd0737ad4240e854ce61e45afc015af0e181ad9a94; "
+                            "manager=rpm; "
+                            "else echo 'No se encontró dpkg ni rpm; instalá OpenCode Desktop manualmente.' >&2; exit 1; fi; "
+                            "curl -fL \"https://github.com/anomalyco/opencode/releases/download/v1.18.13/$asset\" "
+                            "-o \"$d/$asset\"; echo \"$sum  $d/$asset\" | sha256sum -c -; "
+                            "if [ \"$manager\" = deb ]; then sudo dpkg -i \"$d/$asset\"; "
+                            "else sudo rpm -Uvh \"$d/$asset\"; fi"
+                        ),
+                    )
+                ),
+                "windows": InstallPlan(
+                    (
+                        (
+                            "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$d = Join-Path $env:TEMP "
+                            "'opencode-desktop-win-x64.exe'; Invoke-WebRequest -Uri "
+                            "https://github.com/anomalyco/opencode/releases/download/v1.18.13/"
+                            "opencode-desktop-win-x64.exe -OutFile $d; if ((Get-FileHash $d -Algorithm SHA256).Hash "
+                            "-ne '3D1796DAA0762EC49CDB27F8418B8E0D2DAFB37D89DD4EA766B42BDD7CD6D260') "
+                            "{ throw 'Checksum inválido' }; Start-Process -FilePath $d -Wait\""
+                        ),
+                    )
+                ),
+            }
+        ),
+        MappingProxyType(
+            {
+                "linux": ("/opt/OpenCode/ai.opencode.desktop", "/usr/bin/ai.opencode.desktop"),
+                "windows": (
+                    "{localappdata}/Programs/OpenCode/OpenCode.exe",
+                    "{programfiles}/OpenCode/OpenCode.exe",
+                ),
+            }
+        ),
+    ),
 )
 TOOLS_BY_NAME = MappingProxyType({tool.name: tool for tool in TOOLS})
 
@@ -173,12 +227,45 @@ def version_at_least(actual: str, minimum: str) -> bool:
 
 
 def _version_command(spec: ToolSpec) -> list[str]:
+    assert spec.command is not None
     return [spec.command, "--version"]
+
+
+def _detection_path(spec: ToolSpec) -> Path | None:
+    """Return the first known application path that exists on this platform."""
+    try:
+        system = normalize_system(platform.system())
+    except ValueError:
+        return None
+    replacements = {
+        "{localappdata}": os.environ.get("LOCALAPPDATA", ""),
+        "{programfiles}": os.environ.get("ProgramFiles", ""),
+    }
+    for value in spec.detection_paths.get(system, ()):
+        for placeholder, replacement in replacements.items():
+            value = value.replace(placeholder, replacement)
+        path = Path(value).expanduser()
+        if path.is_file():
+            return path
+    return None
 
 
 def inspect_tool(spec: ToolSpec, *, run: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run) -> ToolStatus:
     """Check a tool without changing the host system."""
     supported = spec.supports()
+    if spec.command is None:
+        path = _detection_path(spec)
+        if path is None:
+            return ToolStatus(
+                spec.name,
+                spec.minimum_version,
+                False,
+                None,
+                supported,
+                spec.source,
+                "not found in expected locations",
+            )
+        return ToolStatus(spec.name, spec.minimum_version, True, None, supported, spec.source)
     if shutil.which(spec.command) is None:
         return ToolStatus(spec.name, spec.minimum_version, False, None, supported, spec.source, "not found in PATH")
     try:
