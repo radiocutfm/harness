@@ -9,7 +9,7 @@ metadata:
 
 ## Propósito
 
-Usá esta skill cuando el usuario quiera preparar el entorno completo o comprobar qué integraciones puede utilizar. Consultá `fierro-harness setup` para conocer el estado actual y `fierro-harness setup --json` para que otro proceso lo consuma.
+Usá esta skill cuando el usuario quiera preparar el entorno completo o comprobar qué integraciones puede utilizar. Consultá `fierro-harness setup --json` para conocer el estado actual.
 
 ## Reglas
 
