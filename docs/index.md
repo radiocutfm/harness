@@ -14,33 +14,31 @@ manera independiente.
 
 ## Instalación rápida
 
-```{tab-set}
-
-```{tab-item} Windows
+::::{tab-set}
+:::{tab-item} Windows
 
 ```powershell
 irm https://github.com/radiocutfm/harness/releases/latest/download/install.ps1 | iex
 ```
 
-```
+:::
 
-```{tab-item} Linux
-
-```sh
-curl -fsSL https://github.com/radiocutfm/harness/releases/latest/download/install.sh | sh
-```
-
-```
-
-```{tab-item} macOS
+:::{tab-item} Linux
 
 ```sh
 curl -fsSL https://github.com/radiocutfm/harness/releases/latest/download/install.sh | sh
 ```
 
+:::
+
+:::{tab-item} macOS
+
+```sh
+curl -fsSL https://github.com/radiocutfm/harness/releases/latest/download/install.sh | sh
 ```
 
-```
+:::
+::::
 
 El instalador se puede ejecutar nuevamente para reparar o reconciliar el
 entorno. Para detalles de herramientas, autenticación y configuración inicial,
