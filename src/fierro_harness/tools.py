@@ -37,6 +37,13 @@ class ToolSpec:
         except KeyError:
             raise ValueError(f"{self.name!r} is not supported on {normalized!r}") from None
 
+    def supports(self, system: str | None = None) -> bool:
+        """Return whether this tool has an installation plan for a platform."""
+        try:
+            return normalize_system(system or platform.system()) in self.install_plans
+        except ValueError:
+            return False
+
 
 @dataclass(frozen=True)
 class ToolStatus:
@@ -107,7 +114,12 @@ TOOLS = (
                 "windows": InstallPlan(
                     (
                         "Invoke-WebRequest https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-windows-amd64.exe -OutFile jq.exe",
-                        "(Get-FileHash jq.exe -Algorithm SHA256).Hash -eq 'A6FC67FEDAF9128A3309A1E2EBB8B986AECCF70122EE46D2CB4849E423F0C627'",
+                        "if ((Get-FileHash jq.exe -Algorithm SHA256).Hash -ne 'A6FC67FEDAF9128A3309A1E2EBB8B986AECCF70122EE46D2CB4849E423F0C627') { throw 'Checksum inválido' }",
+                    )
+                ),
+                "macos": InstallPlan(
+                    (
+                        "set -eu; case \"$(uname -m)\" in arm64) asset=jq-macos-arm64; sum=2d75340ba57a4b4b4c8708a21c2dc8e958a48aaa8bba13b27f77f6e4c0eca07e ;; x86_64) asset=jq-macos-amd64; sum=e94b266e3c26690550006abe63152b782280f4e14374accdf04cbde844f00bc0 ;; *) echo 'Arquitectura no soportada' >&2; exit 1 ;; esac; curl -fL \"https://github.com/jqlang/jq/releases/download/jq-1.8.2/$asset\" -o jq; echo \"$sum  jq\" | shasum -a 256 -c -; mkdir -p ~/.local/bin; install -m 0755 jq ~/.local/bin/jq",
                     )
                 ),
             }
@@ -132,23 +144,25 @@ def _version_command(spec: ToolSpec) -> list[str]:
 
 def inspect_tool(spec: ToolSpec, *, run: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run) -> ToolStatus:
     """Check a tool without changing the host system."""
+    supported = spec.supports()
     if shutil.which(spec.command) is None:
-        return ToolStatus(spec.name, spec.minimum_version, False, None, True, spec.source, "not found in PATH")
+        return ToolStatus(spec.name, spec.minimum_version, False, None, supported, spec.source, "not found in PATH")
     try:
         result = run(_version_command(spec), capture_output=True, text=True, check=False, timeout=10)
     except (OSError, subprocess.SubprocessError) as error:
-        return ToolStatus(spec.name, spec.minimum_version, False, None, True, spec.source, str(error))
+        return ToolStatus(spec.name, spec.minimum_version, False, None, supported, spec.source, str(error))
     output = (result.stdout or result.stderr).strip()
     if result.returncode != 0:
-        return ToolStatus(spec.name, spec.minimum_version, False, None, True, spec.source, output or "version command failed")
+        return ToolStatus(spec.name, spec.minimum_version, False, None, supported, spec.source, output or "version command failed")
+    installed = version_at_least(output, spec.minimum_version)
     return ToolStatus(
         spec.name,
         spec.minimum_version,
-        version_at_least(output, spec.minimum_version),
+        installed,
         output,
-        True,
+        supported,
         spec.source,
-        None if version_at_least(output, spec.minimum_version) else "version is too old",
+        None if installed else "version is too old",
     )
 
 

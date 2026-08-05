@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from dataclasses import asdict
 
 from . import __version__
 from .installer import install
@@ -26,14 +27,17 @@ def main() -> int:
         return install(dry_run=args.dry_run)
     if args.command == "tools":
         if args.plan:
-            print("\n".join(installation_plan(next(tool for tool in TOOLS if tool.name == args.plan))))
+            try:
+                print("\n".join(installation_plan(next(tool for tool in TOOLS if tool.name == args.plan))))
+            except ValueError as error:
+                parser.error(str(error))
             return 0
         statuses = inspect_tools()
         if args.as_json:
-            print(json.dumps([status.__dict__ for status in statuses], ensure_ascii=False))
+            print(json.dumps([asdict(status) for status in statuses], ensure_ascii=False))
         else:
             for status in statuses:
-                state = "ok" if status.installed else "missing"
+                state = "ok" if status.installed else "outdated" if status.version else "missing"
                 version = status.version or "-"
                 print(f"{status.name}: {state}; version={version}; minimum={status.minimum_version}")
         return 0 if all(status.installed for status in statuses) else 1

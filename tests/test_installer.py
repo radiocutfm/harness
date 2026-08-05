@@ -39,8 +39,11 @@ def test_jq_plan_uses_a_pinned_release_and_checksum() -> None:
     plan = installation_plan(TOOLS_BY_NAME["jq"], system="Linux")
     assert "jq-1.8.2" in plan[0]
     assert "sha256sum -c" in plan[1]
+    assert "throw 'Checksum inválido'" in installation_plan(TOOLS_BY_NAME["jq"], system="Windows")[1]
 
 
 def test_platform_names_are_normalized_before_plan_lookup() -> None:
     assert normalize_system("Darwin") == "macos"
     assert "install.sh" in TOOLS_BY_NAME["uv"].installation_plan("Darwin").commands[0]
+    assert TOOLS_BY_NAME["jq"].supports("Darwin")
+    assert "jq-macos" in installation_plan(TOOLS_BY_NAME["jq"], system="Darwin")[0]
