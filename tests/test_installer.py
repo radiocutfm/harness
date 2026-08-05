@@ -65,7 +65,7 @@ def test_typer_cli_renders_a_tool_plan() -> None:
 def test_typer_cli_rejects_unknown_tool_plan() -> None:
     result = runner.invoke(app, ["tools", "--plan", "unknown"])
     assert result.exit_code == 2
-    assert "unknown tool" in result.output
+    assert "herramienta desconocida" in result.output
 
 
 def test_plans_are_explicit_for_each_core_tool() -> None:

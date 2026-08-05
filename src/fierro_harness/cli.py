@@ -1,4 +1,4 @@
-"""Command-line interface for Fierro Agents Harness."""
+"""Interfaz de línea de comandos de Fierro Agents Harness."""
 
 from __future__ import annotations
 
@@ -12,11 +12,11 @@ from . import __version__
 from .installer import install as reconcile_install
 from .tools import TOOLS, inspect_tools, install_tool, installation_plan
 
-app = typer.Typer(add_completion=False, help="Install and prepare Fierro harness tools.", rich_markup_mode=None)
+app = typer.Typer(add_completion=False, help="Instala y prepara las herramientas de Fierro Harness.", rich_markup_mode=None)
 
 
 def version_callback(value: bool) -> None:
-    """Print the installed harness version before command processing."""
+    """Muestra la versión instalada antes de procesar el comando."""
     if value:
         typer.echo(__version__)
         raise typer.Exit()
@@ -26,31 +26,31 @@ def version_callback(value: bool) -> None:
 def root(
     version: Annotated[
         bool,
-        typer.Option("--version", callback=version_callback, is_eager=True, help="Show the harness version."),
+        typer.Option("--version", callback=version_callback, is_eager=True, help="Muestra la versión del harness."),
     ] = False,
 ) -> None:
-    """Install, inspect, and prepare Fierro harness components."""
+    """Instala, inspecciona y prepara los componentes de Fierro Harness."""
 
 
 @app.command()
 def install(
-    dry_run: Annotated[bool, typer.Option("--dry-run", help="Show changes without applying them.")] = False,
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="Muestra los cambios sin aplicarlos.")] = False,
 ) -> None:
-    """Install or reconcile the harness."""
-    typer.echo(f"Fierro-harness {__version__}: {'dry-run' if dry_run else 'install'}")
+    """Instala o reconcilia el harness."""
+    typer.echo(f"Fierro-harness {__version__}: {'simulación' if dry_run else 'instalación'}")
     raise typer.Exit(reconcile_install(dry_run=dry_run))
 
 
 @app.command()
 def tools(
-    as_json: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
-    plan: Annotated[str | None, typer.Option("--plan", help="Show an installation plan.")] = None,
+    as_json: Annotated[bool, typer.Option("--json", help="Emite JSON.")] = False,
+    plan: Annotated[str | None, typer.Option("--plan", help="Muestra un plan de instalación.")] = None,
 ) -> None:
-    """Inspect core command-line tools."""
+    """Inspecciona las herramientas de línea de comandos principales."""
     if plan:
         tool = next((item for item in TOOLS if item.name == plan), None)
         if tool is None:
-            raise typer.BadParameter(f"unknown tool: {plan}", param_hint="--plan")
+            raise typer.BadParameter(f"herramienta desconocida: {plan}", param_hint="--plan")
         try:
             typer.echo("\n".join(installation_plan(tool)))
         except ValueError as error:
@@ -62,7 +62,7 @@ def tools(
         typer.echo(json.dumps([asdict(status) for status in statuses], ensure_ascii=False))
     else:
         for status in statuses:
-            state = "ok" if status.installed else "outdated" if status.version else "missing"
+            state = "correcta" if status.installed else "desactualizada" if status.version else "ausente"
             version = status.version or "-"
             typer.echo(f"{status.name}: {state}; version={version}; minimum={status.minimum_version}")
     raise typer.Exit(0 if all(status.installed for status in statuses) else 1)
@@ -72,17 +72,17 @@ def tools(
 def setup(
     install_names: Annotated[
         list[str] | None,
-        typer.Option("--install", help="Tool to install; repeat the option for multiple tools."),
+        typer.Option("--install", help="Herramienta a instalar; repetí la opción para varias herramientas."),
     ] = None,
-    yes: Annotated[bool, typer.Option("--yes", help="Confirm the displayed installation plan.")] = False,
-    dry_run: Annotated[bool, typer.Option("--dry-run", help="Show installation commands without running them.")] = False,
-    as_json: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
+    yes: Annotated[bool, typer.Option("--yes", help="Confirma el plan de instalación mostrado.")] = False,
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="Muestra los comandos sin ejecutarlos.")] = False,
+    as_json: Annotated[bool, typer.Option("--json", help="Emite JSON.")] = False,
 ) -> None:
-    """Check or explicitly install tools for enabled skills."""
+    """Verifica o instala explícitamente herramientas de las skills habilitadas."""
     requested = set(install_names or [])
     unknown = requested - {tool.name for tool in TOOLS} - {"all"}
     if unknown:
-        raise typer.BadParameter(f"unknown tool: {min(unknown)}", param_hint="--install")
+        raise typer.BadParameter(f"herramienta desconocida: {min(unknown)}", param_hint="--install")
     statuses = inspect_tools()
     selected = TOOLS if "all" in requested else tuple(tool for tool in TOOLS if tool.name in requested)
     if not selected:
@@ -90,20 +90,20 @@ def setup(
             typer.echo(json.dumps([asdict(status) for status in statuses], ensure_ascii=False))
         else:
             for status in statuses:
-                state = "ok" if status.installed else "pending"
+                state = "correcta" if status.installed else "pendiente"
                 typer.echo(f"{status.name}: {state}; minimum={status.minimum_version}; source={status.source}")
         raise typer.Exit(0 if all(status.installed for status in statuses) else 1)
     if not yes:
         for tool in selected:
-            typer.echo(f"{tool.name} ({tool.minimum_version} or newer):")
+            typer.echo(f"{tool.name} ({tool.minimum_version} o posterior):")
             for command in installation_plan(tool):
                 typer.echo(f"  {command}")
-        typer.echo("Re-run with --yes to confirm installation.")
+        typer.echo("Volvé a ejecutar con --yes para confirmar la instalación.")
         raise typer.Exit(1)
     for tool in selected:
         install_tool(tool, dry_run=dry_run)
 
 
 def main() -> None:
-    """Run the Typer application."""
+    """Ejecuta la aplicación de Typer."""
     app()
