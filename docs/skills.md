@@ -38,7 +38,14 @@ operaciones todavía están pendientes de implementación. [Ver la fuente](gh:sr
 Es la skill prevista para la CLI corporativa de Fierro; su contrato de
 autenticación y permisos todavía está pendiente de implementación. [Ver la fuente](gh:src/fierro_harness/resources/skills/fierro-cli/SKILL.md).
 
-## `zoho-desk` y `zoko-kb`
+## `zoho-desk`
 
-Son skills iniciales para las integraciones de Zoho. Ambas esperan la selección
-de una herramienta aprobada antes de habilitar operaciones. [Ver `zoho-desk`](gh:src/fierro_harness/resources/skills/zoho-desk/SKILL.md) y [ver `zoko-kb`](gh:src/fierro_harness/resources/skills/zoko-kb/SKILL.md).
+Analiza tickets y conversaciones mediante el MCP corporativo de Zoho Desk. La
+lectura es predeterminada; las respuestas, comentarios y modificaciones exigen
+mostrar el alcance y pedir confirmación explícita. [Ver `zoho-desk`](gh:src/fierro_harness/resources/skills/zoho-desk/SKILL.md).
+
+## `zoho-kb`
+
+Consulta la base de conocimiento de Zoho mediante el MCP corporativo, prioriza
+lecturas y referencias, contrasta con documentación pública y detecta artículos
+faltantes o potencialmente desactualizados. [Ver `zoho-kb`](gh:src/fierro_harness/resources/skills/zoho-kb/SKILL.md).
