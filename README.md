@@ -31,7 +31,7 @@ En esta versión se incluyen:
 
 - `scripting-python`: herramienta general para resolver tareas automatizables con Python y `uv`.
 - `setup`: prepara herramientas requeridas por las skills.
-- `trello`, `google-workspace`, `fierro-cli`, `zoho-desk` y `zoko-kb`: skills iniciales de integración.
+- `trello`, `google-workspace`, `fierro-cli`, `zoho-desk` y `zoho-kb`: skills iniciales de integración.
 
 Las integraciones que todavía requieren configuración de sus herramientas se habilitan progresivamente. La skill `setup` puede preparar el conjunto completo cuando esas herramientas estén definidas.
 
